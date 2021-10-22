@@ -59,26 +59,26 @@ public class OrderController {
 
     }
 
-    @PostMapping(value = "/recieveOrder")
-    public ResponseEntity recieveOrder(@RequestBody OrderRequestSendAlePay orderRequestSendAlePay) {
-        OrderResponse orderResponse = null;
-        User user = userDao.getUserById(orderRequestSendAlePay.getUserId());
-        if (user != null) {
-            orderResponse = new OrderResponse("000", "Thành Công", "CheckoutUrl", "TransactionCode");
-            return new ResponseEntity<>(orderResponse, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(orderResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+//     @PostMapping(value = "/recieveOrder")
+//     public ResponseEntity recieveOrder(@RequestBody OrderRequestSendAlePay orderRequestSendAlePay) {
+//         OrderResponse orderResponse = null;
+//         User user = userDao.getUserById(orderRequestSendAlePay.getUserId());
+//         if (user != null) {
+//             orderResponse = new OrderResponse("000", "Thành Công", "CheckoutUrl", "TransactionCode");
+//             return new ResponseEntity<>(orderResponse, HttpStatus.OK);
+//         } else {
+//             return new ResponseEntity<>(orderResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+//         }
+//     }
 
-    @PostMapping(value = "/recievePayment")
-    public ResponseEntity recievePayment(@RequestBody PaymentRequest paymentRequest) {
-        if (paymentRequest.getStatus().equals("000")) {
-            System.out.println("==== Lưu vào db ====");
-            return new ResponseEntity<>(paymentRequest, HttpStatus.OK);
-        } else {
-            System.out.println("=== Do something ====");
-        }
-        return new ResponseEntity<>("==== transaction fail ====", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-}
+//     @PostMapping(value = "/recievePayment")
+//     public ResponseEntity recievePayment(@RequestBody PaymentRequest paymentRequest) {
+//         if (paymentRequest.getStatus().equals("000")) {
+//             System.out.println("==== Lưu vào db ====");
+//             return new ResponseEntity<>(paymentRequest, HttpStatus.OK);
+//         } else {
+//             System.out.println("=== Do something ====");
+//         }
+//         return new ResponseEntity<>("==== transaction fail ====", HttpStatus.INTERNAL_SERVER_ERROR);
+//     }
+// }
