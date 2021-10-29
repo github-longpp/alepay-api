@@ -3,20 +3,19 @@ package com.icom.alepayorder.controller;
 import com.icom.alepayorder.dao.UserDao;
 import com.icom.alepayorder.dao.UserRepository;
 import com.icom.alepayorder.dto.OrderRequest;
-import com.icom.alepayorder.dto.OrderRequestSendAlePay;
-import com.icom.alepayorder.dto.OrderResponse;
-import com.icom.alepayorder.dto.PaymentRequest;
 import com.icom.alepayorder.entity.User;
-import com.icom.alepayorder.utils.RandomUtils;
+import com.icom.alepayorder.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Optional;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 
 @RestController
@@ -24,38 +23,39 @@ import java.util.Optional;
 public class OrderController {
 
     @Autowired
-    private UserDao userDao;
+    private Environment environment;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserDao userDao;
+
+//    @Autowired
+//    private UserRepository userRepository;
 
     @PostMapping(value = "/sendOrder")
-    public ResponseEntity sendOrder(@RequestBody OrderRequest orderRequest) throws URISyntaxException {
-        OrderRequestSendAlePay orderRequestSendAlePay = new OrderRequestSendAlePay();
-        orderRequestSendAlePay.setAmount(orderRequest.getAmount());
-        orderRequestSendAlePay.setUserId(orderRequest.getUserId());
-        orderRequestSendAlePay.setCustomMerchantId("icom123");
-        orderRequestSendAlePay.setOrderCode(RandomUtils.randomOrderCode());
-        orderRequestSendAlePay.setOrderDescription("description");
-        orderRequestSendAlePay.setTokenKey("dhklHv7DCqvvxtH4pQWDQhaTXGkTpo");
+    public ResponseEntity sendOrder(@RequestBody OrderRequest orderRequest) throws NoSuchAlgorithmException, InvalidKeyException {
+        User user = userDao.getUserById(orderRequest.getUserId());
+        StringBuilder data = new StringBuilder();
+        data.append("amount=" + orderRequest.getAmount());
+        data.append("&buyerAddress=" + user.getAddress());
+        data.append("&buyerCity=" + user.getCity());
+        data.append("&buyerCountry=" + user.getCountry());
+        data.append("&buyerEmail=" + user.getEmail());
+        data.append("&buyerName=" + user.getFullName());
+        data.append("&buyerPhone=" + user.getPhone());
+        data.append("&cancelUrl=" + orderRequest.getCancelUrl());
+        data.append("&currency=" + environment.getProperty("order.currency"));
+        data.append("&customMerchantId=" + environment.getProperty("order.customMerchantId"));
+        data.append("&orderCode=" + Utils.randomOrderCode());
+        data.append("&orderDescription=" + environment.getProperty("order.orderDescription"));
+        data.append("&returnUrl=" + orderRequest.getReturnUrl());
+        data.append("&tokenKey=" + environment.getProperty("order.tokenKey"));
 
-//        final String url = "http://localhost:8080/order/recieveOrder";
-//        URI uri = new URI(url);
-//
-//        RestTemplate restTemplate = new RestTemplate();
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//
-//        HttpEntity<OrderRequestSendAlePay> requestBody = new HttpEntity<>(orderRequestSendAlePay, headers);
-//
-//        OrderResponse result = restTemplate.postForObject(uri, requestBody, OrderResponse.class);
-//        System.out.println(result);
-//        if (result != null) {
-//            return new ResponseEntity<>(result, HttpStatus.OK);
-//        } else
-//            return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
-            return new ResponseEntity<>(orderRequestSendAlePay, HttpStatus.OK);
+        System.out.println(data.toString());
+
+        byte[] checksumKey = environment.getProperty("order.checksumKey").getBytes();
+
+        String signature = Utils.generateHmac256(data.toString(), checksumKey);
+        return new ResponseEntity<>(signature, HttpStatus.OK);
 
     }
 
@@ -81,4 +81,4 @@ public class OrderController {
 //         }
 //         return new ResponseEntity<>("==== transaction fail ====", HttpStatus.INTERNAL_SERVER_ERROR);
 //     }
- }
+}
